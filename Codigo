@@ -1,0 +1,200 @@
+New-Item -Path 'C:\Users\Coke\Desktop\Hospital' -ItemType Directory
+New-Item -Path 'C:\Users\Coke\Desktop\Hospital\infectados' -ItemType Directory
+New-Item -Path 'C:\Users\Coke\Desktop\Hospital\no-infectados' -ItemType Directory
+
+DO{
+
+
+Write-Host '
+Registro de Pacientes
+-------------------------------'
+
+
+Write-Host '
+1. Insertar informacion del paciente
+2. Ver todos los pacientes registrados
+3. Ver informacion de un paciente concreto
+4. Eliminar paciente
+5. Ver pacientes infectados
+6. Ver pacientes no infectados
+7. Salir
+'
+$opcion = Read-Host '¿Que desea hacer?'
+
+switch($opcion){
+
+1{
+
+[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+
+$dni = Read-Host 'Introduzca su dni: '
+$nombre = Read-Host 'Introduzca su nombre: '
+$apellido = Read-Host 'Introduzca su apellido: '
+$telefono = Read-Host 'Introduzca su telefono movil: '
+$edad = Read-Host 'Introduce tu edad: '
+$temperatura  = [double] (Read-Host -Prompt 'Introduce tu temperatura corporal: ')
+$direccion = Read-Host 'Introduzca su direccion: '
+$infectado = 0
+
+if($temperatura -lt 37.7){
+    $infectado=0
+    New-Item C:\Users\Coke\Desktop\Hospital\no-infectados\$dni -ItemType Directory
+    $dni,$nombre,$apellido,$telefono,$edad,$temperatura,$direccion > C:\Users\Coke\Desktop\Hospital\no-infectados\$dni\$dni'.txt'
+    $path = "C:\Users\Coke\Desktop\locationQR.png"
+    New-QRCodeGeolocation -OutPath $path -Address $direccion > C:\Users\Coke\Desktop\Hospital\no-infectados\$dni\$direccion'.png'
+    Start-Sleep -Seconds 3
+}
+if($temperatura -gt 37.7){
+    $infectado=1
+    New-Item C:\Users\Coke\Desktop\Hospital\infectados\$dni -ItemType Directory
+    $dni,$nombre,$apellido,$telefono,$edad,$temperatura,$direccion > C:\Users\Coke\Desktop\Hospital\infectados\$dni\$dni'.txt'
+    $path = "C:\Users\Coke\Desktop\locationQR.png"
+    New-QRCodeGeolocation -OutPath $path -Address $direccion > C:\Users\Coke\Desktop\Hospital\infectados\$dni\$direccion'.png'
+    Start-Sleep -Seconds 3
+}
+
+
+
+$Query = "insert into pacientes (dni,nombre,apellido,edad,temperatura,telefono,direccion,infectado) values('" + $dni + "','" + $nombre + "','" + $apellido +"','" + $edad + "','" + $temperatura + "','" + $telefono + "','" + $direccion +"','" + $infectado + "');"
+
+$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+$ConnectionString = "server=" + "localhost" + ";port=3306;uid=" + "root" + ";pwd=" + ";database="+"coronavirus"
+$Connection.ConnectionString = $ConnectionString
+$Connection.Open()
+$Connection
+
+
+$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+$DataSet = New-Object System.Data.DataSet
+$RecordCount = $dataAdapter.Fill($dataSet, "data") 
+$DataSet.Tables[0]
+$Connection.Close()
+}
+
+2{
+
+[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+
+$Query = "SELECT dni as DNI, nombre as Nombre , apellido as Apellido, edad as Edad, temperatura as Temperatura, telefono as Telefono, direccion as Direccion, infectado as Infectado FROM pacientes"
+
+$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+$ConnectionString = "server=" + "localhost" + ";port=3306;uid=" + "root" + ";pwd=" + ";database="+"coronavirus"
+$Connection.ConnectionString = $ConnectionString
+$Connection.Open()
+
+
+
+$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+$DataSet = New-Object System.Data.DataSet
+$RecordCount = $dataAdapter.Fill($dataSet, "data") 
+$DataSet.Tables[0]
+$Connection.Close()
+}
+
+3{
+
+$dniBuscar = Read-Host 'Introduce DNI: '
+
+
+[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+
+$Query = "SELECT dni as DNI, nombre as Nombre , apellido as Apellido, edad as Edad, temperatura as Temperatura, telefono as Telefono, direccion as Direccion, infectado as Infectado FROM pacientes WHERE id = " + $dniBuscar
+
+$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+$ConnectionString = "server=" + "localhost" + ";port=3306;uid=" + "root" + ";pwd=" + ";database="+"coronavirus"
+$Connection.ConnectionString = $ConnectionString
+$Connection.Open()
+
+
+
+$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+$DataSet = New-Object System.Data.DataSet
+$RecordCount = $dataAdapter.Fill($dataSet, "data") 
+$DataSet.Tables[0]
+$Connection.Close()
+}
+
+4{
+
+$dniBuscar = Read-Host 'Introduce DNI: '
+
+
+[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+
+$Query = "DELETE FROM pacientes where dni = " + $dniBuscar
+
+$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+$ConnectionString = "server=" + "localhost" + ";port=3306;uid=" + "root" + ";pwd=" + ";database="+"coronavirus"
+$Connection.ConnectionString = $ConnectionString
+$Connection.Open()
+
+
+
+$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+$DataSet = New-Object System.Data.DataSet
+$RecordCount = $dataAdapter.Fill($dataSet, "data") 
+$DataSet.Tables[0]
+$Connection.Close()
+}
+
+5{
+
+Write-Host 'Los pacientes infectados son: '
+
+
+[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+
+
+
+$Query = "SELECT dni as DNI, nombre as Nombre , apellido as Apellido, edad as Edad, temperatura as Temperatura, telefono as Telefono, direccion as Direccion FROM pacientes WHERE infectado = 1"
+
+$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+$ConnectionString = "server=" + "localhost" + ";port=3306;uid=" + "root" + ";pwd=" + ";database="+"coronavirus"
+$Connection.ConnectionString = $ConnectionString
+$Connection.Open()
+
+
+
+$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+$DataSet = New-Object System.Data.DataSet
+$RecordCount = $dataAdapter.Fill($dataSet, "data") 
+$DataSet.Tables[0]
+$Connection.Close()
+}
+
+6{
+
+Write-Host 'Los pacientes no infectados son: '
+
+
+[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+
+$Query = "SELECT dni as DNI, nombre as Nombre , apellido as Apellido, edad as Edad, temperatura as Temperatura, telefono as Telefono, direccion as Direccion FROM pacientes WHERE infectado = 0"
+
+$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+$ConnectionString = "server=" + "localhost" + ";port=3306;uid=" + "root" + ";pwd=" + ";database="+"coronavirus"
+$Connection.ConnectionString = $ConnectionString
+$Connection.Open()
+
+
+
+$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+$DataSet = New-Object System.Data.DataSet
+$RecordCount = $dataAdapter.Fill($dataSet, "data") 
+$DataSet.Tables[0]
+$Connection.Close()
+}
+
+
+}
+
+}while($opcion -ne '7')
+
+Write-Host '
+¡ Gracias, vuelva pronto !'
